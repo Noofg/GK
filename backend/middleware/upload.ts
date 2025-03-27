@@ -4,7 +4,7 @@ import path from "path";
 // Cấu hình nơi lưu trữ file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Lưu file vào thư mục 'uploads/'
+    cb(null, "uploads/"); 
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Đổi tên file

@@ -13,6 +13,9 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { TextInput } from "react-native-gesture-handler";
 import AddProject from "../screens/AddProject";
 import EditProject from "../screens/EditProject";
+import Login from "../screens/Login";
+import CustomTabBar from "../component/CustomTabBar";
+import MainLayout from "../MainLayout";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -34,7 +37,9 @@ const Stack = createStackNavigator();
 
 // 📌 Stack Navigator (Web)
 type NavigationProp = StackNavigationProp<
-  { Home:  { updatedProject?: any }|undefined; Register: undefined; Account:undefined; EditProject:undefined },
+  { Home:  { updatedProject?: any }|undefined; Register: undefined; Account:undefined; EditProject:undefined ;
+  Login:undefined
+},
   "Home"
 >;
 const WebStack = () => {
@@ -63,6 +68,7 @@ const WebStack = () => {
         <Stack.Screen name="Account" component={AccountScreen} />
         <Stack.Screen name="AddProject" component={AddProject}/>
         <Stack.Screen name="EditProject" component={EditProject as React.ComponentType<any>}/>
+        <Stack.Screen name="Login" component={Login}/>
 
       </Stack.Navigator>
     </>
@@ -70,13 +76,15 @@ const WebStack = () => {
 };
 const MobileStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* Tab Navigator chứa các màn hình chính */}
-      <Stack.Screen name="MainTabs" component={MobileTabs} />
-      {/* Các màn hình không nằm trong menu tab */}
-      <Stack.Screen name="AddProject" component={AddProject} />
-      <Stack.Screen name="EditProject"component={EditProject as React.ComponentType<any>} />
-    </Stack.Navigator>
+    <MainLayout>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={MobileTabs} />
+        <Stack.Screen name="AddProject" component={AddProject} />
+        <Stack.Screen name="EditProject" component={EditProject as React.ComponentType<any>} />
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+      </Stack.Navigator>
+    </MainLayout>
   );
 };
 
@@ -95,6 +103,7 @@ const MobileTabs = () => (
     <Tab.Screen name="Home" component={HomeScreen} />
     <Tab.Screen name="Register" component={RegisterScreen} />
     <Tab.Screen name="Account" component={AccountScreen} />
+    
   </Tab.Navigator>
 );
 

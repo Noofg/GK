@@ -3,6 +3,7 @@ import {
   View,
   Text,
   Button,
+  Image,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -15,12 +16,14 @@ import MainLayout from "../MainLayout";
 import BASE_URL from "../service/config";
 import axios from "axios";
 
+
 // Định nghĩa kiểu dữ liệu Project
 type Project = {
   _id: string;
   name: string;
   type: string;
   price: number;
+  image: string;
 };
 
 // Định nghĩa kiểu dữ liệu của navigation
@@ -34,7 +37,8 @@ const HomeScreen = (route) => {
   const { width } = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]); // Sửa kiểu dữ liệu
-
+  const [query, setQuery] = useState<string>("");
+  const [results, setResults] = useState<Project[]>([]);
   
   useEffect(() => {
     fetchProjects();
@@ -59,11 +63,7 @@ const HomeScreen = (route) => {
       console.error("Lỗi khi lấy danh sách dự án:", error);
     }
   };
-  useFocusEffect(
-    useCallback(() => {
-      fetchProjects();
-    }, [])
-  );
+ 
   useEffect(() => {
     axios
       .get<Project[]>(`${BASE_URL}/project`)
@@ -112,8 +112,25 @@ const HomeScreen = (route) => {
         console.error("Lỗi khi xóa dự án:", error);
       });
   };
-  
-
+  const searchProject = async (text: string)=>{
+    setQuery(text);
+    if (text.trim()) {
+      try {
+        const response = await axios.get<Project[]>(`${BASE_URL}/project/searchProject?query=${text}`);
+        console.log("Kết quả tìm kiếm:", response.data);
+        setResults(response.data);
+      } catch (error) {
+        console.error("Lỗi khi tìm kiếm dự án:", error);
+      }
+    } else {
+      setResults([]); 
+    }
+  };
+  useFocusEffect(
+    useCallback(() => {
+      fetchProjects();
+    }, [])
+  );
   
 
   return (
@@ -154,7 +171,7 @@ const HomeScreen = (route) => {
                   {projects.length > 0 ? (
                     projects.map((project) => (
                       <TouchableOpacity key={project._id}>
-                        <Text style={styles.menuItem}>📌 {project.name}</Text>
+                        <Text style={styles.menuItem}> {project.name}</Text>
                       </TouchableOpacity>
                     ))
                   ) : (
@@ -170,7 +187,8 @@ const HomeScreen = (route) => {
         <View style={styles.mainContent}>
           {/* Header */}
           <View style={styles.header}>
-            <TextInput style={styles.searchBox} placeholder="Search" />
+            <TextInput value={query} style={styles.searchBox} placeholder="Search" onChangeText={searchProject}/>
+          
             <Button
               title="+ ADD"
               color="#0052cc"
@@ -184,6 +202,7 @@ const HomeScreen = (route) => {
 
             {/* Tiêu đề cột */}
             <View style={styles.headerRow}>
+              <Text style={[styles.headerText, styles.columnImage]}>Hình ảnh</Text>
               <Text style={[styles.headerText, styles.columnName]}>Tên sản phẩm</Text>
               <Text style={[styles.headerText, styles.columnType]}>Loại</Text>
               <Text style={[styles.headerText, styles.columnPrice]}>Giá</Text>
@@ -191,34 +210,48 @@ const HomeScreen = (route) => {
             </View>
 
             {/* Danh sách các dự án */}
-            {projects.length > 0 ? (
-              projects.map((project) => (
-                <View key={project._id} style={styles.projectRow}>
-                  <Text style={[styles.projectText, styles.columnName]}>
-                    {project.name}
-                  </Text>
-                  <Text style={[styles.projectText, styles.columnType]}>
-                    {project.type}
-                  </Text>
-                  <Text style={[styles.projectText, styles.columnPrice]}>
-                    {project.price} USD
-                  </Text>
-                  <View style={styles.projectActions}>
-                    <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("EditProject" as any,{project })}>
-                      <Text style={styles.actionText} >Edit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() =>{console.log("Click vào nút Xóa với ID:", project._id); handleDeleteProject(project._id)}}
-                    >
-                      <Text style={styles.actionText}>Delete</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))
-            ) : (
-              <Text>Không có dự án nào.</Text>
-            )}
+            {(results.length > 0 ? results : projects).length > 0 ? (
+  (results.length > 0 ? results : projects).map((project) => (
+    <View key={project._id} style={styles.projectRow}>
+      <Image 
+        source={{ uri: project.image }} 
+        style={styles.columnImage} 
+        resizeMode="cover" 
+      />
+      <Text style={[styles.projectText, styles.columnName]}>
+        {project.name}
+      </Text>
+      <Text style={[styles.projectText, styles.columnType]}>
+        {project.type}
+      </Text>
+      <Text style={[styles.projectText, styles.columnPrice]}>
+        {project.price} USD
+      </Text>
+      <View style={styles.projectActions}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() =>
+            navigation.navigate("EditProject" as any, { project })
+          }
+        >
+          <Text style={styles.actionText}>sửa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            console.log("Click vào nút Xóa với ID:", project._id);
+            handleDeleteProject(project._id);
+          }}
+        >
+          <Text style={styles.actionText}>xoá</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ))
+) : (
+  <Text>Không có dự án nào.</Text>
+)}
+
           </View>
         </View>
       </View>
@@ -332,6 +365,13 @@ const styles = StyleSheet.create({
   },
   columnActions: {
     width: "22%",
+  },
+  columnImage:{
+    width: 50,
+    height:50,
+    marginRight:10,
+    borderRadius: 8,
+
   },
   projectRow: {
     flexDirection: "row",

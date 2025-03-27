@@ -5,7 +5,7 @@ import path from "path";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import projectRoutes from "./routes/projectRoutes"
-import uploadRoutes from "./middleware/upload";
+
 
 dotenv.config();
 connectDB();

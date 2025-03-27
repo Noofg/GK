@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { 
-  View, Text, TextInput, TouchableOpacity, Alert, StyleSheet 
+  View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image 
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import BASE_URL from "../service/config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,16 +25,32 @@ const EditProject: React.FC<Props> = ({ route, navigation }) => {
   const { project } = route.params;
   console.log("Updating project with ID:", project._id);
 
+  const [image, setImage] = useState(project.image);
   const [name, setName] = useState(project.name);
   const [type, setType] = useState(project.type);
   const [price, setPrice] = useState(project.price.toString());
 
+  // Hàm chọn ảnh từ thư viện
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  
   const handleUpdate = () => {
     axios
-      .put(`${BASE_URL}/project/${project._id}`, { name, type, price: Number(price) })
+      .put(`${BASE_URL}/project/${project._id}`, { name, type, price: Number(price), image })
       .then((response) => {
         Alert.alert("Thành công", "Dự án đã được cập nhật!");
-        navigation.goBack(); 
+        navigation.goBack();
       })
       .catch((error) => {
         console.error("Lỗi khi cập nhật dự án:", error);
@@ -45,6 +62,17 @@ const EditProject: React.FC<Props> = ({ route, navigation }) => {
     <View style={styles.container}>
       <View style={styles.form}>
         <Text style={styles.title}>Chỉnh sửa Dự án</Text>
+
+      
+        <TouchableOpacity onPress={pickImage}>
+          {image ? (
+            <Image source={{ uri: image }} style={styles.image} />
+          ) : (
+            <View style={[styles.image, styles.imagePlaceholder]}>
+              <Text style={styles.imagePlaceholderText}>Chọn ảnh</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
         <TextInput
           placeholder="Tên dự án"
@@ -75,6 +103,7 @@ const EditProject: React.FC<Props> = ({ route, navigation }) => {
 };
 
 export default EditProject;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -125,5 +154,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 17,
     fontWeight: "bold",
+  },
+  image: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  imagePlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f0f0",
+  },
+  imagePlaceholderText: {
+    color: "#999",
+    fontSize: 16,
   },
 });

@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
 import Project from "../models/Project";
+import { promises } from "dns";
 
-// Controller để thêm dự án mới
+// Controller add
 const addProject = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("Dữ liệu nhận được:", req.body);
 
     const newProject = new Project(req.body);
 
-    // Lưu vào MongoDB
+
     await newProject.save();
 
     console.log("Dự án đã được lưu:", newProject);
@@ -19,7 +20,7 @@ const addProject = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Controller để lấy danh sách các dự án
+// Controller get
 const listProjects = async (req: Request, res: Response): Promise<void> => {
   try {
     const projects = await Project.find();
@@ -49,13 +50,13 @@ const deleteProject = async (req: Request, res:Response)=>{
 }
 const updateProject = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, type, price } = req.body;
+      const { name, type, price,image } = req.body;
       const projectId = req.params.id;
   
       const updatedProject = await Project.findByIdAndUpdate(
         projectId,
-        { name, type, price },
-        { new: true } // Trả về dữ liệu sau khi cập nhật
+        { name, type, price,image },
+        { new: true } 
       );
   
       if (!updatedProject) {
@@ -69,6 +70,26 @@ const updateProject = async (req: Request, res: Response): Promise<void> => {
       res.status(500).json({ error: "Lỗi server khi cập nhật!" });
     }
   };
+  const searchProject = async(req:Request, res: Response  ):Promise<void>=>{
+    try {
+      const query = req.query.query as string; 
+      console.log("Từ khóa tìm kiếm:", query);
+      if (!query) {
+        res.status(400).json({ error: "Thiếu tham số tìm kiếm!" });
+        return;
+      }
+  
+      const projects = await Project.find({ 
+        name: { $regex: query, $options: "i" } 
+      });
+  
+      res.status(200).json(projects);
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm dự án:", error);
+      res.status(500).json({ error: "Lỗi server khi tìm kiếm!" });
+    }
+
+  }
 
 // Xuất riêng từng controller
-export { addProject, listProjects, deleteProject,updateProject };
+export { addProject, listProjects, deleteProject,updateProject,searchProject };
